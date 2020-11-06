@@ -353,6 +353,8 @@ if (AlphaABS.Build >= 1194){
 	AA.BattleUI.previewTarget = function(target){
 		if (target && target.inActive()){
 			AABS.FP._AA_BattleUI_previewTarget.call(this, target);
+		} else if (this.lastETUIItem == null && this._lastUITaget == null){
+			return this._ui != null ? this._ui.showTarget(null) : void 0;
 		}
 	};
 }
