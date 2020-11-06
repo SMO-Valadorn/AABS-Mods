@@ -37,37 +37,35 @@
 *------------------------------------------------------------------------------
 * What bugs does this plugin fix?
 *
-* 1. Game crash on load showing the message "concat is not a function" or
-*    "Cannot read property 'inBattle' of undefined";
+* - Game Crashes
+*    When loading a saved game you could come across one of the messages:
+*    "Cannot read property 'concat' of undefined" or "Cannot read property 
+*   'inBattle' of undefined". Loading a game saved before the build 1190 on
+*    a build above 1190 would also crash the game.
 *
-* 2. Bush effect not working;
+* - FPS drop
+*   The spell panel used to cause a considerable drop of FPS on certain
+*   computers, and so did adding/removing party members on ABS maps.
 *
-* 3. Summoning's ballon stuck on screen after unsummon;
+* - Bush effect not working;
 *
-* 4. Firearm "unloads" after transfering through ABS maps;
+* - Summoning's ballon stuck on screen after unsummon and summoning never
+*   comming back after using "Recover All";
 *
-* 5. Ammo disappears when reloading a firearm;
+* - Firearm "unloads" after transfering through ABS maps and ammo disappears
+*   when reloading if the player is full of ammo.
 *
-* 6. Summoning never comes back after using "Recover All";
+* - Preview-target edible to use on deactivated enemies;
 *
-* 7. Preview-target used on deactivated enemies;
+* - Player's movement speed stuck on lower or highers values after death;
 *
-* 8. Player's movement speed stuck on lower or highers values after death;
+* - Skills' parameters don't refresh on old saved games;
 *
-* 9. Game crashes when loading a build before 1190 on 1194+;
+* - Not being able to add party members on ABS maps on build 1190+;
 *
-* 10. Skills' parameters don't refresh on old saved games;
-*
-* 11. FPS drop caused by the spell panel;
-*
-* 12. FPS drop caused by adding party members in ABS maps;
-*
-* 13. Not being able to add party members in ABS maps on build 1190+;
-*
-* 14. Adding an offset to a motionX also affect animations;
-*
-* 15. Enemies with multiple motionX skills may cause a bug where a new
-* image will be asked on img/characters.
+* - Adding an offset to a motionX also affect animations and enemies with 
+*   multiple motionX skills may cause a bug where a new image will be asked 
+*   on img/characters.
 *------------------------------------------------------------------------------
 * Does this plugin add something to it or is it just bug fixes?
 * I'm glad you asked!
