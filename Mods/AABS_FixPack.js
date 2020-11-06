@@ -680,6 +680,7 @@ Sprite_Character.prototype.setCharacterBitmap = function() {
 
 Sprite_Character.prototype.isMotionEnding = function(){
 	if (this._character.__basicCN == null) return false;
+	if (this._character === $gamePlayer) return false;
 	if (this._character.inAAnimMotion()) return false;
 	if (this._character.inABSMotion()){
 		var motion = this._character.ABSParams().absMotion;
