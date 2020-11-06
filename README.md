@@ -7,4 +7,4 @@ ALL mods must be placed beneath Alpha ABS on the plugin manager.
 
 A pack of bug fixes focused on the build 1128, but may contain bug fixes for other builds. [See Wiki](https://github.com/SMO-Valadorn/AABS-Mods/wiki/Bug-Fixing-Pack)
 
-[Download Plugin](https://github.com/SMO-Valadorn/AABS-Mods/blob/main/Mods/AABS_FixPack.js) - Raw file (Use RMB and click on "Save as...")
+[Download Plugin](https://raw.githubusercontent.com/SMO-Valadorn/AABS-Mods/main/Mods/AABS_FixPack.js) - Raw file (Use RMB and click on "Save as...")
