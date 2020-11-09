@@ -1,6 +1,6 @@
 /*:
 * =============================================================================================
-* @plugindesc v1.00 - A pack of bug fixes for Alpha ABS. Place this plugin UNDER Alpha ABS on
+* @plugindesc v1.01 - A pack of bug fixes for Alpha ABS. Place this plugin UNDER Alpha ABS on
 * the Plugin Manager.
 * @author SMO
 *
@@ -19,6 +19,11 @@
 * @desc Do you want to see all the ammo available next to the
 * weapon's icon? Default: YES
 * @default true
+*
+* @param Pet Collision
+* @type boolean
+* @desc If OFF, the player won't collide with it's summoning (pet).
+* @default false
 *
 * @help
 *==============================================================================
@@ -80,6 +85,7 @@
 * on the enemies' note and everytime you select it on map the target circle
 * will be repositioned.
 *
+*------------------------------------------------------------------------------
 * REPOSITIONING THE <ABS:1> SKILL'S VECTORS
 * This will reposition the vector in the momment it's launched, to do so
 * use the notetag:
@@ -93,7 +99,24 @@
 * the vector's sprite.
 *
 *------------------------------------------------------------------------------
+* HIDING THE RESULT POP UP
+* If you are using a skill just to activate a common event you may notice that
+* even if you succeed in using the skill you'll see the word "Fail" on AABS's
+* log. Now you can hide it by writing:
+*
+* <hideResultPopUp>
+*
+* on the skill's note and that pop up won't appear.
+*
+*------------------------------------------------------------------------------
 * Changelog:
+*
+* V 1.01
+*   - Fixed: Game crash when adding more party members than you can have in
+*     battle;
+*   - Added: Skill's notetag to avoid showing the "Fail" word on AABS's log;
+*   - Added: Possibility to deactivate the player's collision with pet (check
+*   the parameter "Pet Collision");
 *
 * V 1.00 
 *   - Plugin released;
@@ -109,11 +132,12 @@ if (Imported.AlphaABS){
 Imported.AABS_FixPack = true;
 var AABS = AABS || {};
 AABS.FP = {};
-AABS.FP.version = 1.00;
+AABS.FP.version = 1.01;
 
 AABS.Param = PluginManager.parameters('AABS_FixPack');
 AABS.FP.showAllAmmoA = AABS.Param['All Ammo A'] === 'true' ? true : false;
 AABS.FP.showAllAmmoB = AABS.Param['All Ammo B'] === 'true' ? true : false;
+AABS.FP.petCollision = AABS.Param['Pet Collision'] === 'false' ? false : true;
 
 //-----------------------------------------------------------------------------------------------
 //#FEATURE
@@ -166,15 +190,45 @@ AlphaABS.LIBS.Game_SVector.prototype.getOffset = function(){
 	if (subject && this.isFacingHorz() && subject._absParams){
 		offset += this._data.skill.vectorOffSetY;    //skill's notetag
 		var battler = subject._absParams.battler;
-		var meta = (battler instanceof Game_Actor) ? $dataActors[battler._actorId].meta : 
-			$dataEnemies[battler._enemyId].meta;
-		if (Number(meta.vectorOffSetY)) offset += Number(meta.vectorOffSetY); //battler's notetag
+		if (battler){
+			var meta = (battler instanceof Game_Actor) ? $dataActors[battler._actorId].meta : 
+				$dataEnemies[battler._enemyId].meta;
+			if (Number(meta.vectorOffSetY)) offset += Number(meta.vectorOffSetY); //battler's notetag
+		}
 	}
 	return offset;
 };
 
 AlphaABS.LIBS.Game_SVector.prototype.isFacingHorz = function(){
 	return [4, 6].contains(this._data.subject._direction);
+};
+
+//-----------------------------------------------------------------------------------------------
+//#FEATURE
+//Hiding the result pop up
+
+AABS.FP._BattleProcABS__resultOnDamage = AlphaABS.LIBS.Game_BattleProcessABS.prototype._resultOnDamage;
+AlphaABS.LIBS.Game_BattleProcessABS.prototype._resultOnDamage = function(target){
+	var result = target.result();
+	if (result.isHit() && !result.success && !this._skill._isItem){
+		var skill = $dataSkills[this._skill.skillId];
+		if (skill && skill.meta.hideResultPopUp){
+			target.hideNextInfoPopUp();
+		}
+	}
+	AABS.FP._BattleProcABS__resultOnDamage.call(this, target);
+};
+
+Game_Actor.prototype.hideNextInfoPopUp = function(){
+	this._hideInfoPopUp = true;
+};
+
+AABS.FP._Game_Actor_addInfoPop = Game_Actor.prototype.addInfoPop;
+Game_Actor.prototype.addInfoPop = function(info) {
+	if (!this._hideInfoPopUp){
+		AABS.FP._Game_Actor_addInfoPop.call(this, info);
+	}
+	this._hideInfoPopUp = false;
 };
 
 //-----------------------------------------------------------------------------------------------
@@ -563,13 +617,17 @@ if (AlphaABS.Build >= 1190){
 			$gamePlayer.refresh();
 			$gameMap.requestRefresh();
 			if (AlphaABS.isABS()){
-				var followers = $gamePlayer.followers();
-				newABSMember = new AIAlly(followers._data.length + 1);
-				followers._data.push(newABSMember);
-				if(!followers._data[followers._data.length - 1].reInitABS){
-					followers._data[followers._data.length - 1].reInitABS = function(){};
-				};
-				newABSMember.locate($gamePlayer.x, $gamePlayer.y);
+				if (this._actors.length < this.maxBattleMembers()){
+					var followers = $gamePlayer.followers();
+					newABSMember = new AIAlly(followers._data.length + 1);
+					followers._data.push(newABSMember);
+					if(!followers._data[followers._data.length - 1].reInitABS){
+						followers._data[followers._data.length - 1].reInitABS = function(){};
+					};
+					newABSMember.locate($gamePlayer.x, $gamePlayer.y);
+				} else {
+					console.warn("You've reached the max amount of battle members in your party.");
+				}
 			}
 		}
 		AABS.FP._Game_Party_addActor.call(this, actorId);
@@ -693,6 +751,20 @@ Sprite_Character.prototype.isMotionEnding = function(){
 	if (!this._character._absParams.active) return false;
 	return true;
 };
+
+//-----------------------------------------------------------------------------------------------
+//#FIX
+//Player won't collide with the pet (summoning)
+
+if (!AABS.FP.petCollision){
+	Game_Player.prototype.isCollidedWithEvents = function(x, y) {
+		var events = $gameMap.eventsXyNt(x, y);
+		return events.some(function(event) {
+			return event.isNormalPriority() && !(event instanceof Game_SummonAiBot);
+		});
+	};
+}
+
 
 //-----------------------------------------------------------------------------------------------
 } else { //Imported.AlphaABS
