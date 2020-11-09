@@ -1,6 +1,6 @@
 /*:
 * =============================================================================================
-* @plugindesc v1.01 - A pack of bug fixes for Alpha ABS. Place this plugin UNDER Alpha ABS on
+* @plugindesc v1.02 - A pack of bug fixes for Alpha ABS. Place this plugin UNDER Alpha ABS on
 * the Plugin Manager.
 * @author SMO
 *
@@ -47,6 +47,7 @@
 *    "Cannot read property 'concat' of undefined" or "Cannot read property 
 *   'inBattle' of undefined". Loading a game saved before the build 1190 on
 *    a build above 1190 would also crash the game.
+*    Sometimes plugging/removing the gamepad could cause game crashes too.
 *
 * - FPS drop
 *   The spell panel used to cause a considerable drop of FPS on certain
@@ -111,6 +112,11 @@
 *------------------------------------------------------------------------------
 * Changelog:
 *
+* V 1.02
+*   - Fixed(ABS): Game crash when changing maps or closing the menu while the
+*   gamepad is connected, when unplugging the gamepad and when plugging it on
+*   a non-ABS map;
+*
 * V 1.01
 *   - Fixed: Game crash when adding more party members than you can have in
 *     battle;
@@ -132,7 +138,7 @@ if (Imported.AlphaABS){
 Imported.AABS_FixPack = true;
 var AABS = AABS || {};
 AABS.FP = {};
-AABS.FP.version = 1.01;
+AABS.FP.version = 1.02;
 
 AABS.Param = PluginManager.parameters('AABS_FixPack');
 AABS.FP.showAllAmmoA = AABS.Param['All Ammo A'] === 'true' ? true : false;
@@ -617,7 +623,7 @@ if (AlphaABS.Build >= 1190){
 			$gamePlayer.refresh();
 			$gameMap.requestRefresh();
 			if (AlphaABS.isABS()){
-				if (this._actors.length < this.maxBattleMembers()){
+				if (this._actors.length <= this.maxBattleMembers()){
 					var followers = $gamePlayer.followers();
 					newABSMember = new AIAlly(followers._data.length + 1);
 					followers._data.push(newABSMember);
@@ -765,6 +771,46 @@ if (!AABS.FP.petCollision){
 	};
 }
 
+//-----------------------------------------------------------------------------------------------
+//#FIX
+//Game crashing when dealing with gamepad
+//
+//After map load, the gamepad UI obj is deleted, that's why the game crashes when trying to run
+//AA.BattleUI.gamePadUI().afterButtonsLoad(), because AA.BattleUI.gamePadUI() will return null
+
+AABS.FP._Scene_Map_onMapLoaded = Scene_Map.prototype.onMapLoaded;
+Scene_Map.prototype.onMapLoaded = function () {
+	try {
+		AABS.FP._Scene_Map_onMapLoaded.call(this);
+	} catch (e){
+		if (this.isGamepadNeedFix()){
+			var UI = AlphaABS.LIBS.BattleUI._ui;
+			UI._gamepadUI = new AA.LIBS.GamePadUI(UI);
+			AA.BattleUI.gamePadUI().afterButtonsLoad();
+		}
+	}
+};
+
+Scene_Map.prototype.isGamepadNeedFix = function(){
+	if (!Input.isGamepad()) return false;
+	if (this.sceneButtonSystem == null) return false;
+	if (!AlphaABS.Parameters.isUIButtonsAllowed()) return false;
+	return $gameMap.isABS() && !AA.BattleUI.gamePadUI();
+};
+
+//Fix to game crash when plugging/unplugging the gamepad
+AAGamePadManager.isReady = function() {
+	return Input._axes != null && navigator.getGamepads().item(0) != null;
+};
+
+//Fix to game crash when plugging the gamepad on a non-ABS map
+if (AlphaABS.Build >= 1194){
+	AABS.FP._Game_Party_isAnyCanChangeBehMode = Game_Party.prototype.isAnyCanChangeBehMode;
+	Game_Party.prototype.isAnyCanChangeBehMode = function(){
+		if (!AlphaABS.isABS()) return false;
+		AABS.FP._Game_Party_isAnyCanChangeBehMode.call(this);
+	};
+}
 
 //-----------------------------------------------------------------------------------------------
 } else { //Imported.AlphaABS
