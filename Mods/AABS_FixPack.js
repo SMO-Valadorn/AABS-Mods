@@ -1,6 +1,6 @@
 /*:
 * =============================================================================================
-* @plugindesc v1.02 - A pack of bug fixes for Alpha ABS. Place this plugin UNDER Alpha ABS on
+* @plugindesc v1.03 - A pack of bug fixes for Alpha ABS. Place this plugin UNDER Alpha ABS on
 * the Plugin Manager.
 * @author SMO
 *
@@ -111,6 +111,11 @@
 *
 *------------------------------------------------------------------------------
 * Changelog:
+*
+* V 1.03
+*   - Fixed: Using the command "Recovery All" could crash the game;
+*   - Fixed(ABS): Selecting an area to use a skill using the gamepad would
+*   show no animation;
 *
 * V 1.02
 *   - Fixed(ABS): Game crash when changing maps or closing the menu while the
@@ -762,7 +767,7 @@ Sprite_Character.prototype.isMotionEnding = function(){
 //#FIX
 //Player won't collide with the pet (summoning)
 
-if (!AABS.FP.petCollision){
+if (!AABS.FP.petCollision && (!Imported.AABS_EnemyPlus || AABS.EnP.allyCollision)){
 	Game_Player.prototype.isCollidedWithEvents = function(x, y) {
 		var events = $gameMap.eventsXyNt(x, y);
 		return events.some(function(event) {
@@ -809,6 +814,42 @@ if (AlphaABS.Build >= 1194){
 	Game_Party.prototype.isAnyCanChangeBehMode = function(){
 		if (!AlphaABS.isABS()) return false;
 		AABS.FP._Game_Party_isAnyCanChangeBehMode.call(this);
+	};
+}
+
+//-----------------------------------------------------------------------------------------------
+//#FIX
+//Animations on "select area" skills didn't appear when using a gamepad
+
+AABS.FP._GBPABS__requestMapAnimation = AlphaABS.LIBS.Game_BattleProcessABS.prototype._requestMapAnimation;
+AlphaABS.LIBS.Game_BattleProcessABS.prototype._requestMapAnimation = function(animationId){
+	if (!this._centerPoint) return;
+
+	//Animation fix
+	if (this.isFixJoystickReqAnim()){
+		this._centerPoint = [this._centerPoint._x, this._centerPoint._y];
+	}
+	
+	//Fix for builds before 1200
+	if (AlphaABS.Build <= 1198 && !(this._centerPoint instanceof AlphaABS.LIBS.PointX)) {
+		this._centerPoint = this._centerPoint.toPoint();
+	}
+	AABS.FP._GBPABS__requestMapAnimation.call(this, animationId);
+};
+
+AlphaABS.LIBS.Game_BattleProcessABS.prototype.isFixJoystickReqAnim = function(){
+	if (this._centerPoint instanceof AlphaABS.LIBS.PointX) return false;
+	if (!(this._centerPoint instanceof AAPoint)) return false;
+	return true;
+};
+
+//-----------------------------------------------------------------------------------------------
+//#FIX
+//Game crash when trying to get the summon unit
+
+if (AlphaABS.Build <= 1194){
+	Game_Player.prototype.getSummonUnit = function() {
+		return (this._absParams && this.battler()) ? this.battler()._mySummonUnit : null;
 	};
 }
 
