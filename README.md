@@ -12,4 +12,4 @@ A pack of bug fixes focused on the build 1128, but may contain bug fixes for oth
 ## Party Plus (v1.00)
 ![](https://github.com/SMO-Valadorn/hello-world/blob/master/Images/PartyPlus/PartyPlus.png)
 
-Adds extra features related to the party. [See Wiki](https://github.com/SMO-Valadorn/AABS-Mods/wiki/Party-Plus)
+Adds some features to the game party. [See Wiki](https://github.com/SMO-Valadorn/AABS-Mods/wiki/Party-Plus)
