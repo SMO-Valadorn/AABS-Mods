@@ -10,6 +10,6 @@ A pack of bug fixes focused on the build 1128, but may contain bug fixes for oth
 [Download Plugin](https://raw.githubusercontent.com/SMO-Valadorn/AABS-Mods/main/Mods/AABS_FixPack.js) - Raw file (Use RMB and click on "Save as...")
 
 ## Party Plus (v1.00)
-![](https://github.com/SMO-Valadorn/hello-world/blob/master/Images/Bug_Smash.png)
+![](https://github.com/SMO-Valadorn/hello-world/blob/master/Images/PartyPlus/PartyPlus.png)
 
 A pack of bug fixes focused on the build 1128, but may contain bug fixes for other builds. [See Wiki](https://github.com/SMO-Valadorn/AABS-Mods/wiki/Bug-Fixing-Pack)
